@@ -24,16 +24,9 @@ public class HLB {
   static private HashMap<String,RangeSet> lcranges = new HashMap<String,RangeSet>();
   static private HashMap<String, ArrayList<ArrayList>> cats = new HashMap<String, ArrayList<ArrayList>>();
 
-  static {
-    try {
-      getAndParseJSON();
-    } catch (IOException e) {
-      throw new RuntimeException("Can't get hlb3.json: " + e.getMessage());
-    }
-  }
 
 
-  
+
 
   public static Set<String> components(String s) {
     Set<String> rv = new HashSet<String>();
@@ -81,40 +74,73 @@ public class HLB {
     return rv;
   }
 
-  private static void getAndParseJSON() throws IOException {
-    URL url = new URL("http://mirlyn.lib.umich.edu/static/hlb3/hlb3.json");
+  // Public initialize -- get it from the URL if unspecified, otherwise
+  // get it from the given filename
+  public static void initialize(String filename) throws IOException {
+    System.out.println("Trying to get " + filename);
+    Map raw = getRawFromFile(filename);
+    initialize(raw);
+  }
+
+  public static void initialize() throws IOException {
+    Map raw = getRawFromURL();
+    initialize(raw);
+  }
+
+
+  public static void initialize(Map raw) {
+    lcranges = createRangeset(raw);
+    cats = createCategories(raw);
+  }
+
+  // Download and parse JSON from the URL
+  private static Map getRawFromURL() throws IOException {
+
+    URL url = new URL("https://mirlyn.lib.umich.edu/static/hlb3/hlb3.json");
     BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
     map = mapper.readValue(in, Map.class);
-//    map = mapper.readValue(new File("/tmp/hlb3.json"), Map.class);
+    return map;
+  }
 
-    // Get the LC ranges
-    ArrayList<ArrayList> lc = (ArrayList) map.get("lcranges");
+  // Read and parse JSON from a file
+  public static Map getRawFromFile(String filename) throws IOException {
+    System.out.println("Trying to read file " + filename);
+    return mapper.readValue(new File(filename), Map.class);
+  }
+
+
+  private static HashMap<String, ArrayList<ArrayList>> createCategories(Map raw) {
+    // Get the categories
+    return (HashMap<String, ArrayList<ArrayList>>) raw.get("topics");
+
+  }
+
+  private static HashMap<String,RangeSet> createRangeset(Map raw) {
+    HashMap<String,RangeSet> ranges = new HashMap<String,RangeSet>();
+    ArrayList<ArrayList> lc = (ArrayList) raw.get("lcranges");
     for (ArrayList rng : lc) {
       String rstart = LCCallNumberNormalizer.rangeStart((String) rng.get(1));
       String rend   = LCCallNumberNormalizer.rangeEnd((String) rng.get(2));
       DSR d = new DSR(rstart, rend);
       d.data.put("hlbcat", rng.get(0));
 
-     
+
       String firstLetter = rstart.substring(0,1);
-      if (!lcranges.containsKey(firstLetter)) {
-//        System.out.println("Created new RangeSet for " + firstLetter);
-        lcranges.put(firstLetter, new RangeSet());
+      if (!ranges.containsKey(firstLetter)) {
+        ranges.put(firstLetter, new RangeSet());
       }
 
-      lcranges.get(firstLetter).add(d);
-//    System.out.println(d.data.get("hlbcat") + ": " + d.start + "-" + d.end);
+      ranges.get(firstLetter).add(d);
     }
 
     // Sort them now instead of later
-    for (String key : lcranges.keySet()) {
-      lcranges.get(key).sort();
+    for (String key : ranges.keySet()) {
+      ranges.get(key).sort();
     }
 
-    // Get the categories
-    cats = (HashMap<String, ArrayList<ArrayList>>) map.get("topics");
-
+    return ranges;
 
 
   }
+
 }

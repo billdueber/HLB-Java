@@ -30,9 +30,7 @@ public class HLBTest {
 
   @Test
   public void testGetAndParseJSON() throws Exception {
-    System.out.println("getAndParseJSON");
-
-
+    HLB.initialize("/tmp/hlb3.json");
 
     String[] cns = {"QH 430 .H3731 1994", "HV 95 .W65 1994", "A14", "Z242.99", "111"};
 
