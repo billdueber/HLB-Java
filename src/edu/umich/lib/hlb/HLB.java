@@ -49,8 +49,13 @@ public class HLB {
     return rv;
   }
 
-  public static Set<String> categories(String s) {
-    Set<String> rv = new HashSet<String>();
+
+
+
+
+  public static ArrayList categories(String s) {
+    ArrayList<ArrayList> rv = new ArrayList<ArrayList>();
+    HashSet<ArrayList> c = new HashSet<ArrayList>();
     Set<DSR> dsrs;
 
     try {
@@ -63,21 +68,18 @@ public class HLB {
 
     for (DSR d : dsrs) {
       ArrayList<ArrayList> categories = cats.get((String) d.data.get("hlbcat"));
-      for (ArrayList a : categories) {
-        if (a.size() == 2) {
-          rv.add(a.get(0) + " | " + a.get(1));
-        } else {
-          rv.add(a.get(0) + " | " + a.get(1) + " | " + a.get(2));
-        }
+      for (ArrayList clist : categories) {
+        c.add(clist);
       }
     }
-    return rv;
+    // Copy them into an array
+
+    return new ArrayList(c);
   }
 
   // Public initialize -- get it from the URL if unspecified, otherwise
   // get it from the given filename
   public static void initialize(String filename) throws IOException {
-    System.out.println("Trying to get " + filename);
     Map raw = getRawFromFile(filename);
     initialize(raw);
   }
@@ -104,7 +106,6 @@ public class HLB {
 
   // Read and parse JSON from a file
   public static Map getRawFromFile(String filename) throws IOException {
-    System.out.println("Trying to read file " + filename);
     return mapper.readValue(new File(filename), Map.class);
   }
 
