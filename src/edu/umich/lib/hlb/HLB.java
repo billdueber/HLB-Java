@@ -17,7 +17,7 @@ import org.codehaus.jackson.map.ObjectMapper;
  * @author dueberb
  */
 public class HLB {
-
+  static private boolean loaded = false;
   static private Map<String, Object> map;
   static private ObjectMapper mapper = new ObjectMapper();
   static private HashMap<String,RangeSet> lcranges = new HashMap<String,RangeSet>();
@@ -84,14 +84,19 @@ public class HLB {
   }
 
   public static void initialize() throws IOException {
+    
     Map raw = getRawFromURL();
     initialize(raw);
   }
 
 
-  public static void initialize(Map raw) {
+  public static synchronized void initialize(Map raw) {
+      if (loaded == true) {
+	  return;
+      }
     lcranges = createRangeset(raw);
     cats = createCategories(raw);
+    loaded = true;
   }
 
   // Download and parse JSON from the URL
