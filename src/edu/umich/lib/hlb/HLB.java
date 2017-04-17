@@ -18,7 +18,6 @@ import org.codehaus.jackson.map.ObjectMapper;
  */
 public class HLB {
 
-  static private Boolean gotTheFile = false;
   static private Map<String, Object> map;
   static private ObjectMapper mapper = new ObjectMapper();
   static private HashMap<String,RangeSet> lcranges = new HashMap<String,RangeSet>();
@@ -96,7 +95,7 @@ public class HLB {
   }
 
   // Download and parse JSON from the URL
-  private static Map getRawFromURL() throws IOException {
+  private static synchronized Map getRawFromURL() throws IOException {
 
     URL url = new URL("https://mirlyn.lib.umich.edu/static/hlb3/hlb3.json");
     BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
@@ -105,18 +104,18 @@ public class HLB {
   }
 
   // Read and parse JSON from a file
-  public static Map getRawFromFile(String filename) throws IOException {
+  public static synchronized Map getRawFromFile(String filename) throws IOException {
     return mapper.readValue(new File(filename), Map.class);
   }
 
 
-  private static HashMap<String, ArrayList<ArrayList>> createCategories(Map raw) {
+  private static synchronized HashMap<String, ArrayList<ArrayList>> createCategories(Map raw) {
     // Get the categories
     return (HashMap<String, ArrayList<ArrayList>>) raw.get("topics");
 
   }
 
-  private static HashMap<String,RangeSet> createRangeset(Map raw) {
+  private static synchronized HashMap<String,RangeSet> createRangeset(Map raw) {
     HashMap<String,RangeSet> ranges = new HashMap<String,RangeSet>();
     ArrayList<ArrayList> lc = (ArrayList) raw.get("lcranges");
     for (ArrayList rng : lc) {
